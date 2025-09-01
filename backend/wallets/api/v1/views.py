@@ -13,7 +13,7 @@ class WalletCreateView(APIView):
 
         wallet = Wallet.objects.create()
 
-        return Response({'message':f'Кошелек {wallet.id} создан'})
+        return Response({"message":f"Кошелек {wallet.id} создан"})
     
 
 class WalletBalancView(APIView):
@@ -21,7 +21,7 @@ class WalletBalancView(APIView):
 
         wallet = get_object_or_404(Wallet, id=id)
 
-        return Response({'message':f'Баланс: {wallet.balance}'}) 
+        return Response({"message":f"Баланс: {wallet.balance}"}) 
 
 
 class WalletOperationView(APIView):
@@ -30,14 +30,13 @@ class WalletOperationView(APIView):
         serializer.is_valid(raise_exception=True)
 
         with transaction.atomic():
-            wallet = get_object_or_404(Wallet, id=id)
-            wallet = (Wallet.objects.select_for_update().get(id=id))
+            wallet = get_object_or_404(Wallet.objects.select_for_update(), id=id)
 
             operation_type = serializer.validated_data['operation_type']
             amount = serializer.validated_data['amount']
 
             if operation_type == 'WITHDRAW' and wallet.balance < amount:
-                return Response({'error':'Недостаточно средст'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error':'Недостаточно средств'}, status=status.HTTP_400_BAD_REQUEST)
 
             operation = Operation.objects.create(
                 wallet=wallet,
@@ -52,4 +51,9 @@ class WalletOperationView(APIView):
             
             wallet.save()
 
-        return Response({'operation':serializer.data, 'balance': str(wallet.balance)})
+        return Response({
+            "operation_id": str(operation.id),
+            "operation_type": operation.operation_type,
+            "amount": str(operation.amount),
+            "created_at": operation.created_at,
+            })
