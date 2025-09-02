@@ -9,7 +9,7 @@
 ``` json
 {
   "wallet": "7d8624f6-5820-41d3-9a9f-e70deb259438",
-  "balance": "0.00"
+  "balance": "0"
 }
 ```
 
