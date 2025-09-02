@@ -7,12 +7,10 @@ class OperationSerializer(serializers.ModelSerializer):
         model = Operation
         fields = ['operation_type', 'amount']
 
-
     def validate_amount(self, value):
         if value <= 0:
             raise serializers.ValidationError('Сумма меньше нуля')
         return value
-    
 
     def validate_operation_type(self, value):
         if value not in ('DEPOSIT', 'WITHDRAW'):

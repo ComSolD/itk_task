@@ -8,8 +8,8 @@ def test_create_wallet(client):
     url = reverse("wallets:wallet-create")
     response = client.post(url)
 
-    assert response.status_code == 200
-    assert "Кошелек" in response.data["message"]
+    assert response.status_code == 201
+    assert response.data["balance"] == "0"
     assert Wallet.objects.count() == 1
 
 
@@ -20,7 +20,7 @@ def test_get_wallet_balance(client):
     response = client.get(url)
 
     assert response.status_code == 200
-    assert "1337" in response.data["message"]
+    assert "1337" in response.data["balance"]
 
 
 @pytest.mark.django_db
@@ -50,7 +50,7 @@ def test_deposit_operation(client):
     response = client.post(url, data, format="json")
     wallet.refresh_from_db()
 
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert wallet.balance == 420
 
 
@@ -62,14 +62,14 @@ def test_withdraw_operation(client):
     response = client.post(url, data, format="json")
     wallet.refresh_from_db()
 
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert wallet.balance == 555
 
 
 @pytest.mark.django_db
 def test_withdraw_not_enough_balance(client):
     wallet = Wallet.objects.create(balance=42)
-    url = reverse("wallets:wallet-operation", kwargs={"id":wallet.id})
+    url = reverse("wallets:wallet-operation", kwargs={"id": wallet.id})
     data = {"operation_type": "WITHDRAW", "amount": 52}
     response = client.post(url, data, format="json")
     wallet.refresh_from_db()
@@ -81,7 +81,7 @@ def test_withdraw_not_enough_balance(client):
 @pytest.mark.django_db
 def test_invalid_operation_type(client):
     wallet = Wallet.objects.create(balance=430)
-    url = reverse("wallets:wallet-operation", kwargs={"id":wallet.id})
+    url = reverse("wallets:wallet-operation", kwargs={"id": wallet.id})
     data = {"operation_type": "TESTTYPE", "amount": 21}
     response = client.post(url, data, format="json")
 
@@ -92,7 +92,7 @@ def test_invalid_operation_type(client):
 @pytest.mark.django_db
 def test_negative_amount(client):
     wallet = Wallet.objects.create(balance=1984)
-    url = reverse("wallets:wallet-operation", kwargs={"id":wallet.id})
+    url = reverse("wallets:wallet-operation", kwargs={"id": wallet.id})
     data = {"operation_type": "TESTTYPE", "amount": -451}
     response = client.post(url, data, format="json")
 

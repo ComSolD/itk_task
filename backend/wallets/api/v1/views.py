@@ -8,20 +8,21 @@ from rest_framework import status
 from .serializers import OperationSerializer
 from wallets.models import Wallet, Operation
 
+
 class WalletCreateView(APIView):
     def post(self, request):
 
         wallet = Wallet.objects.create()
 
-        return Response({"message":f"Кошелек {wallet.id} создан"})
-    
+        return Response({"wallet": str(wallet.id), "balance": str(wallet.balance)}, status=status.HTTP_201_CREATED)
 
-class WalletBalancView(APIView):
+
+class WalletBalanceView(APIView):
     def get(self, request, id):
 
         wallet = get_object_or_404(Wallet, id=id)
 
-        return Response({"message":f"Баланс: {wallet.balance}"}) 
+        return Response({"balance": str(wallet.balance)})
 
 
 class WalletOperationView(APIView):
@@ -36,19 +37,19 @@ class WalletOperationView(APIView):
             amount = serializer.validated_data['amount']
 
             if operation_type == 'WITHDRAW' and wallet.balance < amount:
-                return Response({'error':'Недостаточно средств'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error': 'Недостаточно средств'}, status=status.HTTP_400_BAD_REQUEST)
 
             operation = Operation.objects.create(
                 wallet=wallet,
                 operation_type=operation_type,
                 amount=amount
             )
-            
+
             if operation_type == 'DEPOSIT':
                 wallet.balance += amount
             else:
                 wallet.balance -= amount
-            
+
             wallet.save()
 
         return Response({
@@ -56,4 +57,4 @@ class WalletOperationView(APIView):
             "operation_type": operation.operation_type,
             "amount": str(operation.amount),
             "created_at": operation.created_at,
-            })
+        }, status=status.HTTP_201_CREATED)
